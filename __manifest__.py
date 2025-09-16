@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 # Part of Odoo. See LICENSE file for full copyright and licensing details.
 {
-    'name': 'CX - Material',
+    'name': 'CX - Material Request',
     'version': '1.0.0',
     'summary': 'Material Request',
     'sequence': 10,
@@ -15,6 +15,9 @@
         # security
         'security/groups.xml',
         'security/ir.model.access.csv',
+
+        # views
+        'views/material_request_views.xml',
     ],
     'installable': True,
     'application': True,
