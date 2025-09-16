@@ -11,7 +11,11 @@
     'author': 'AMP - AWH',
     'category': 'AMP Module',
     'depends': ['cx_stock_period'],
-    'data': [ ],
+    'data': [
+        # security
+        'security/groups.xml',
+        'security/ir.model.access.csv',
+    ],
     'installable': True,
     'application': True,
     'auto_install': False,
