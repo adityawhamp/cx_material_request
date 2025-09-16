@@ -31,6 +31,8 @@ class MaterialRequest(models.Model):
     #     ('progress', 'In Progress'),
     #     ('close', 'Close'),
     # ], default='draft', copy=False, tracking=True, compute='_compute_state', store=True)
+    x_required_date = fields.Datetime(string='Required on', default=fields.Datetime.now, copy=False, tracking=True)
+    x_requester_user_id = fields.Many2one('res.users', string='Requester', default=lambda self: self.env.user, copy=False, tracking=True)
     x_line_ids = fields.One2many('amp.material.request.line', 'x_request_id', string='Line(s)', copy=False)
 
 

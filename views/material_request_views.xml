@@ -24,11 +24,15 @@
                                 <field name="name" readonly="1"/>
                             </h1>
                         </div>
+                        <group>
+                            <field name="x_required_date"/>
+                            <field name="x_requester_user_id" readonly="1"/>
+                        </group>
                         <notebook>
                             <page name="request_line_tab" string="Request Line(s)">
                                 <field name="x_line_ids">
                                     <list string="Line(s)" editable="top">
-                                        <field name="x_product_id"/>
+                                        <field name="x_product_id" options="{'no_create': True, 'no_create_edit': True, 'no_open': True}"/>
                                         <field name="x_uom_id"/>
                                     </list>
                                 </field>
@@ -64,9 +68,9 @@
 
         <!-- MENU -->
          <menuitem id="material_request_root_menu"
-                  name="Material Request"
-                  sequence="400"
-                  groups="group_material_request_user"/>
+                   name="Material Request"
+                   sequence="400"
+                   groups="group_material_request_user"/>
 
         <menuitem id="material_request_operations_menu"
                   name="Operations"
