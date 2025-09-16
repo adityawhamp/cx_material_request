@@ -26,7 +26,7 @@
                         </div>
                         <group>
                             <field name="x_required_date"/>
-                            <field name="x_requester_user_id" readonly="1"/>
+                            <field name="x_requester_user_id" readonly="1" options="{'no_create': True, 'no_create_edit': True, 'no_open': True}"/>
                         </group>
                         <notebook>
                             <page name="request_line_tab" string="Request Line(s)">

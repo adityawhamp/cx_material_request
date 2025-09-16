@@ -12,6 +12,9 @@
     'category': 'AMP Module',
     'depends': ['cx_stock_period'],
     'data': [
+        # data
+        'data/ir_sequence_data.xml',
+
         # security
         'security/groups.xml',
         'security/ir.model.access.csv',

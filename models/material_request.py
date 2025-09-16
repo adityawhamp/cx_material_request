@@ -35,6 +35,14 @@ class MaterialRequest(models.Model):
     x_requester_user_id = fields.Many2one('res.users', string='Requester', default=lambda self: self.env.user, copy=False, tracking=True)
     x_line_ids = fields.One2many('amp.material.request.line', 'x_request_id', string='Line(s)', copy=False)
 
+    @api.model_create_multi
+    def create(self, vals_list):
+        for vals in vals_list:
+            if vals.get('name', 'New Material Request') == 'New Material Request':
+                vals['name'] = self.env['ir.sequence'].next_by_code('material.request.seq')
+        res = super(MaterialRequest, self).create(vals_list)
+        return res
+
 
 class MaterialRequestLine(models.Model):
     _name = 'amp.material.request.line'
