@@ -44,6 +44,10 @@
                                     <list string="Line(s)" editable="top">
                                         <field name="x_product_id" options="{'no_create': True, 'no_create_edit': True, 'no_open': True}"/>
                                         <field name="x_uom_id"/>
+                                        <field name="x_req_qty"/>
+                                        <field name="x_processed_qty"/>
+                                        <field name="x_done_qty"/>
+                                        <field name="x_outstanding_qty"/>
                                     </list>
                                 </field>
                             </page>
