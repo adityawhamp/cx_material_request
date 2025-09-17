@@ -33,6 +33,16 @@ class MaterialRequest(models.Model):
     # ], default='draft', copy=False, tracking=True, compute='_compute_state', store=True)
     x_required_date = fields.Datetime(string='Required on', default=fields.Datetime.now, copy=False, tracking=True)
     x_requester_user_id = fields.Many2one('res.users', string='Requester', default=lambda self: self.env.user, copy=False, tracking=True)
+    x_type = fields.Selection([
+        ('consumption', 'Consumption'),
+        ('transfer', 'Transfer'),
+    ], string='Request Type', copy=False)
+    x_consume_type = fields.Selection([
+        ('out', 'Out'),
+        ('in', 'In'),
+    ], string='Consume Type', copy=False, default=False)
+    x_src_location_id = fields.Many2one('stock.location', string='Source Location', copy=False)
+    x_dest_location_id = fields.Many2one('stock.location', string='Destination Location', copy=False)
     x_line_ids = fields.One2many('amp.material.request.line', 'x_request_id', string='Line(s)', copy=False)
 
     @api.model_create_multi

@@ -25,8 +25,18 @@
                             </h1>
                         </div>
                         <group>
-                            <field name="x_required_date"/>
-                            <field name="x_requester_user_id" readonly="1" options="{'no_create': True, 'no_create_edit': True, 'no_open': True}"/>
+                            <group>
+                                <field name="x_required_date"/>
+                                <field name="x_requester_user_id" readonly="1" options="{'no_create': True, 'no_create_edit': True, 'no_open': True}"/>
+                            </group>
+                            <group>
+                                <field name="x_type"/>
+                                <field name="x_consume_type" invisible="x_type != 'consumption'"/>
+                            </group>
+                            <group>
+                                <field name="x_src_location_id" options="{'no_create': True, 'no_create_edit': True, 'no_open': True}"/>
+                                <field name="x_dest_location_id" options="{'no_create': True, 'no_create_edit': True, 'no_open': True}"/>
+                            </group>
                         </group>
                         <notebook>
                             <page name="request_line_tab" string="Request Line(s)">
