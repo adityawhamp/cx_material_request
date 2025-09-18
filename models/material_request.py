@@ -63,9 +63,9 @@ class MaterialRequestLine(models.Model):
     x_uom_id = fields.Many2one(related='x_product_id.uom_id', store=True)
 
     x_req_qty = fields.Float(string='Request Qty', digits='Product Unit of Measure', copy=False)
-    x_processed_qty = fields.Float(string='Processed Qty', digits='Product Unit of Measure', copy=False, help="Qty being processed.")
+    x_processed_qty = fields.Float(string='Processed Qty', digits='Product Unit of Measure',  help="Qty being processed.")
     x_done_qty = fields.Float(string='Done Qty', digits='Product Unit of Measure', copy=False, help="Done Qty")
     x_outstanding_qty = fields.Float(string='Outstanding Qty', digits='Product Unit of Measure', copy=False, help="""Outstanding Qty = Request Qty - Processed Qty - Done Qty""")
     
     # product move
-    x_move_ids = fields.One2many('stock.move', 'x_mr_line_id', string='Move(s)')
+    x_move_ids = fields.One2many('stock.move', 'x_mr_line_id', string='Move(s)', copy=False)
