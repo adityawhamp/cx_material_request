@@ -21,6 +21,7 @@
                     <header>
                         <button name="action_confirm" type="object" string="Confirm" class="oe_highlight" invisible="status != 'draft'"/>
                         <button name="action_reset_to_draft" type="object" string="Reset to Draft" invisible="status != 'open'"/>
+                        <button name="action_create_picking" type="object" string="Create Picking" class="oe_highlight" invisible="status in ('draft', 'done', 'close')"/>
                         <field name="status" widget="statusbar"/>
                     </header>
                     <sheet>

@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data>
+        <!-- FORM -->
+        <record id="wizard_create_picking_view_form" model="ir.ui.view">
+            <field name="name">wizard.create.picking.view.form</field>
+            <field name="model">amp.wizard.create.picking</field>
+            <field name="arch" type="xml">
+                <form name="Create Picking">
+                    <group>
+                        <group>
+                            <field name="x_mr_id" options="{'no_create':True, 'no_create_edit':True, 'no_open':True}" 
+                                   readonly="1" force_save="1"/>
+                            <field name="x_src_location_id" options="{'no_create':True, 'no_create_edit':True, 'no_open':True}"
+                                   readonly="1" force_save="1"/>
+                            <field name="x_dest_location_id" options="{'no_create':True, 'no_create_edit':True, 'no_open':True}"
+                                   readonly="1" force_save="1"/>
+                        </group>
+                    </group>
+                    <footer>
+                        <button name="action_create_picking" string="Confirm" type="object" class="btn-primary"/>
+                        <button string="Cancel" class="btn-secondary" special="cancel"/>
+                    </footer>
+                </form>
+            </field>
+        </record>
+    </data>
+</odoo>

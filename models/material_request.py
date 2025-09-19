@@ -84,6 +84,24 @@ class MaterialRequest(models.Model):
         for rec in self:
             rec.x_is_confirmed = False
 
+    def action_create_picking(self):
+        title = 'Material Request'
+        view = self.env.ref('cx_material_request.wizard_create_picking_view_form')
+        return {
+            'name': _(title),
+            'type': 'ir.actions.act_window',
+            'view_mode': 'form',
+            'res_model': 'amp.wizard.create.picking',
+            'views': [(view.id, 'form')],
+            'view_id': view.id,
+            'target': 'new',
+            'context': {
+                'default_x_mr_id': self.id,
+                'default_x_src_location_id': self.x_src_location_id.id,
+                'default_x_dest_location_id': self.x_dest_location_id.id,
+            }
+        }
+
 
 class MaterialRequestLine(models.Model):
     _name = 'amp.material.request.line'

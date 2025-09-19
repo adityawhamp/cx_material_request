@@ -21,6 +21,9 @@
 
         # views
         'views/material_request_views.xml',
+
+        # wizard
+        'wizard/wizard_create_picking_views.xml',
     ],
     'installable': True,
     'application': True,
