@@ -31,21 +31,23 @@
                         </div>
                         <group>
                             <group>
-                                <field name="x_required_date"/>
+                                <field name="x_required_date" readonly="status != 'draft'"/>
                                 <field name="x_requester_user_id" readonly="1" options="{'no_create': True, 'no_create_edit': True, 'no_open': True}"/>
                             </group>
                             <group>
-                                <field name="x_type"/>
-                                <field name="x_consume_type" invisible="x_type != 'consumption'"/>
+                                <field name="x_type" readonly="status != 'draft'"/>
+                                <field name="x_consume_type" invisible="x_type != 'consumption'" readonly="status != 'draft'"/>
                             </group>
                             <group>
-                                <field name="x_src_location_id" options="{'no_create': True, 'no_create_edit': True, 'no_open': True}"/>
-                                <field name="x_dest_location_id" options="{'no_create': True, 'no_create_edit': True, 'no_open': True}"/>
+                                <field name="x_src_location_id" domain="[('usage', '=', 'internal')]" options="{'no_create': True, 'no_create_edit': True, 'no_open': True}"
+                                       readonly="status != 'draft'"/>
+                                <field name="x_dest_location_id" domain="[('usage', '=', 'internal')]" options="{'no_create': True, 'no_create_edit': True, 'no_open': True}"
+                                       readonly="status != 'draft'"/>
                             </group>
                         </group>
                         <notebook>
                             <page name="request_line_tab" string="Request Line(s)">
-                                <field name="x_line_ids">
+                                <field name="x_line_ids" readonly="status != 'draft'">
                                     <list string="Line(s)" editable="top">
                                         <field name="x_product_id" options="{'no_create': True, 'no_create_edit': True, 'no_open': True}"/>
                                         <field name="x_uom_id"/>

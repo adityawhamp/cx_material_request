@@ -1,5 +1,6 @@
 from odoo import api, fields, models, _
 from odoo.tools import float_compare
+from odoo.exceptions import ValidationError
 
 
 class MaterialRequest(models.Model):
@@ -50,8 +51,33 @@ class MaterialRequest(models.Model):
         res = super(MaterialRequest, self).create(vals_list)
         return res
 
+    def validation(self, action):
+        self.ensure_one()
+        if action == 'confirm':
+            if self.x_type:
+                if self.x_type == 'transfer':
+                    if not self.x_required_date:
+                        raise ValidationError(_('Required date is empty.'))
+                        
+                    if not self.x_src_location_id:
+                        raise ValidationError(_('Source location is empty.'))
+                    
+                    if not self.x_dest_location_id:
+                        raise ValidationError(_('Destination location is empty.'))
+                    
+                    if self.x_line_ids:
+                        invalid_lines = self.x_line_ids.filtered(lambda l: float_compare(l.x_req_qty, 0, precision_rounding=l.x_uom_id.rounding) != 1)
+                        if invalid_lines:
+                            raise ValidationError(_('There is request qty <= 0.'))    
+                    else:
+                        raise ValidationError(_('Request line is empty.'))
+
+            else:
+                raise ValidationError(_('Request type is empty.'))
+
     def action_confirm(self):
         for rec in self:
+            rec.validation('confirm')
             rec.x_is_confirmed = True
     
     def action_reset_to_draft(self):
