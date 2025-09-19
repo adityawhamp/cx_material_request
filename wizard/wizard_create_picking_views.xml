@@ -17,6 +17,19 @@
                                    readonly="1" force_save="1"/>
                         </group>
                     </group>
+                    <notebook>
+                        <page name="product_tab" string="Product(s)">
+                            <field name="x_line_ids">
+                                <list string="Line(s)" editable="top" create="0" delete="0">
+                                    <field name="x_product_id" readonly="1" force_save="1"/>
+                                    <field name="x_uom_id"/>
+                                    <field name="x_qty"/>
+                                    <field name="x_mr_line_id" options="{'no_create':True, 'no_create_edit':True, 'no_open':True}"
+                                           readonly="1" force_save="1" column_invisible="1"/>
+                                </list>
+                            </field>
+                        </page>
+                    </notebook>
                     <footer>
                         <button name="action_create_picking" string="Confirm" type="object" class="btn-primary"/>
                         <button string="Cancel" class="btn-secondary" special="cancel"/>

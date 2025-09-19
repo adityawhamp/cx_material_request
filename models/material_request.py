@@ -1,4 +1,4 @@
-from odoo import api, fields, models, _
+from odoo import api, fields, models, _, Command
 from odoo.tools import float_compare
 from odoo.exceptions import ValidationError
 
@@ -85,6 +85,16 @@ class MaterialRequest(models.Model):
             rec.x_is_confirmed = False
 
     def action_create_picking(self):
+        active_lines = self.x_line_ids.filtered(lambda l: float_compare(l.x_outstanding_qty, 0, precision_rounding=l.x_uom_id.rounding) == 1)
+        active_line_vals = []
+        for line in active_lines:
+            wizard_line_val = {
+                'x_product_id': line.x_product_id.id, 
+                'x_mr_line_id': line.id, 
+                'x_qty': line.x_outstanding_qty,
+            }
+            active_line_vals.append(Command.create(wizard_line_val))
+        
         title = 'Material Request'
         view = self.env.ref('cx_material_request.wizard_create_picking_view_form')
         return {
@@ -99,6 +109,7 @@ class MaterialRequest(models.Model):
                 'default_x_mr_id': self.id,
                 'default_x_src_location_id': self.x_src_location_id.id,
                 'default_x_dest_location_id': self.x_dest_location_id.id,
+                'default_x_line_ids': active_line_vals,
             }
         }
 
@@ -107,6 +118,12 @@ class MaterialRequestLine(models.Model):
     _name = 'amp.material.request.line'
     _description = 'Material Request Line'
 
+    @api.depends('x_req_qty', 'x_processed_qty', 'x_done_qty')
+    def _compute_ost_qty(self):
+        for rec in self:
+            ost_qty = rec.x_req_qty - rec.x_processed_qty - rec.x_done_qty
+            rec.x_outstanding_qty = ost_qty if float_compare(ost_qty, 0, precision_rounding=rec.x_uom_id.rounding) == 1 else 0
+
     x_request_id = fields.Many2one('amp.material.request', string='Material Request', ondelete='cascade', copy=False)
     x_product_id = fields.Many2one('product.product', string='Product')
     x_uom_id = fields.Many2one(related='x_product_id.uom_id', store=True)
@@ -114,7 +131,8 @@ class MaterialRequestLine(models.Model):
     x_req_qty = fields.Float(string='Request Qty', digits='Product Unit of Measure', copy=False)
     x_processed_qty = fields.Float(string='Processed Qty', digits='Product Unit of Measure',  help="Qty being processed.")
     x_done_qty = fields.Float(string='Done Qty', digits='Product Unit of Measure', copy=False, help="Done Qty")
-    x_outstanding_qty = fields.Float(string='Outstanding Qty', digits='Product Unit of Measure', copy=False, help="""Outstanding Qty = Request Qty - Processed Qty - Done Qty""")
+    x_outstanding_qty = fields.Float(string='Outstanding Qty', compute='_compute_ost_qty', digits='Product Unit of Measure', store=True, 
+                                     help="""Outstanding Qty = Request Qty - Processed Qty - Done Qty""")
     
     # product move
     x_move_ids = fields.One2many('stock.move', 'x_mr_line_id', string='Move(s)', copy=False)
