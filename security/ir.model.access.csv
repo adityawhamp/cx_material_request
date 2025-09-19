@@ -2,3 +2,4 @@ id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
 access_material_request,access.material.request,model_amp_material_request,cx_material_request.group_material_request_user,1,1,1,1
 access_material_request_line,access.material.request.line,model_amp_material_request_line,cx_material_request.group_material_request_user,1,1,1,1
 access_wizard_create_picking,access.wizard.create.picking,model_amp_wizard_create_picking,cx_material_request.group_material_request_user,1,1,1,1
+access_wizard_create_picking_line,access.wizard.create.picking.line,model_amp_wizard_create_picking_line,cx_material_request.group_material_request_user,1,1,1,1

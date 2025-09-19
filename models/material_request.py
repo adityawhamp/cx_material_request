@@ -7,30 +7,27 @@ class MaterialRequest(models.Model):
     _description = 'Material Request'
     _inherit = ['mail.thread', 'mail.activity.mixin']
 
-    # @api.depends('x_line_ids', 'x_line_ids.x_actual_qty', 'x_picking_ids')
-    # def _compute_state(self):
-    #     for rec in self:
-    #         if rec.x_state in ('open', 'progress', 'close'):
-    #             # outstanding
-    #             ostd_lines = rec.x_line_ids.filtered(
-    #                 lambda l: float_compare(l.x_request_qty - l.x_actual_qty, 0.0000, precision_digits=4) == 1)
-    #             active_pickings = rec.x_picking_ids.filtered(lambda p: p.state != 'cancel')
-    #             if ostd_lines:
-    #                 if active_pickings:
-    #                     rec.x_state = 'progress'
-    #                 else:
-    #                     rec.x_state = 'open'
-    #             else:
-    #                 rec.x_state = 'close'
+    @api.depends('x_is_confirmed', 'x_is_closed')
+    def _compute_state(self):
+        for rec in self:
+            if rec.x_is_closed:
+                rec.status = 'close'
+            elif rec.x_is_confirmed:
+                rec.status = 'open'
+            else:
+                rec.status = 'draft'
 
     name = fields.Char(string='Ref', required=True, copy=False, readonly=True,
                        index='trigram', default=lambda self: _('New Material Request'))
-    # status = fields.Selection(string='State', selection=[
-    #     ('draft', 'Draft'),
-    #     ('open', 'Open'),
-    #     ('progress', 'In Progress'),
-    #     ('close', 'Close'),
-    # ], default='draft', copy=False, tracking=True, compute='_compute_state', store=True)
+    x_is_confirmed = fields.Boolean(string='Is Confirmed?', default=False, copy=False)
+    x_is_closed = fields.Boolean(string='Is Closed?', default=False, copy=False)
+    status = fields.Selection(string='State', selection=[
+        ('draft', 'Draft'),
+        ('open', 'Open'),
+        ('progress', 'In Progress'),
+        ('done', 'Done'),
+        ('close', 'Close'),
+    ], default='draft', copy=False, tracking=True, compute='_compute_state', store=True)
     x_required_date = fields.Datetime(string='Required on', default=fields.Datetime.now, copy=False, tracking=True)
     x_requester_user_id = fields.Many2one('res.users', string='Requester', default=lambda self: self.env.user, copy=False, tracking=True)
     x_type = fields.Selection([
@@ -52,6 +49,14 @@ class MaterialRequest(models.Model):
                 vals['name'] = self.env['ir.sequence'].next_by_code('material.request.seq')
         res = super(MaterialRequest, self).create(vals_list)
         return res
+
+    def action_confirm(self):
+        for rec in self:
+            rec.x_is_confirmed = True
+    
+    def action_reset_to_draft(self):
+        for rec in self:
+            rec.x_is_confirmed = False
 
 
 class MaterialRequestLine(models.Model):
