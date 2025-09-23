@@ -15,6 +15,8 @@
                                    readonly="1" force_save="1"/>
                             <field name="x_dest_location_id" options="{'no_create':True, 'no_create_edit':True, 'no_open':True}"
                                    readonly="1" force_save="1"/>
+                            <field name="x_picking_type_id" options="{'no_create':True, 'no_create_edit':True, 'no_open':True}"
+                                   readonly="1" force_save="1"/>
                         </group>
                     </group>
                     <notebook>

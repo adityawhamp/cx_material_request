@@ -17,6 +17,11 @@ class MaterialRequest(models.Model):
                 rec.status = 'open'
             else:
                 rec.status = 'draft'
+    
+    @api.depends('x_picking_ids')
+    def _compute_picking_count(self):
+        for rec in self:
+            rec.x_picking_count = len(rec.x_picking_ids)
 
     name = fields.Char(string='Ref', required=True, copy=False, readonly=True,
                        index='trigram', default=lambda self: _('New Material Request'))
@@ -42,6 +47,8 @@ class MaterialRequest(models.Model):
     x_src_location_id = fields.Many2one('stock.location', string='Source Location', copy=False)
     x_dest_location_id = fields.Many2one('stock.location', string='Destination Location', copy=False)
     x_line_ids = fields.One2many('amp.material.request.line', 'x_request_id', string='Line(s)', copy=False)
+    x_picking_ids = fields.One2many('stock.picking', 'x_mr_id', string='Picking(s)', copy=False)
+    x_picking_count = fields.Integer(string='Picking Count', compute='_compute_picking_count')
 
     @api.model_create_multi
     def create(self, vals_list):
@@ -109,10 +116,26 @@ class MaterialRequest(models.Model):
                 'default_x_mr_id': self.id,
                 'default_x_src_location_id': self.x_src_location_id.id,
                 'default_x_dest_location_id': self.x_dest_location_id.id,
+                'default_x_picking_type_id': self.x_src_location_id.warehouse_id.int_type_id.id,
                 'default_x_line_ids': active_line_vals,
             }
         }
 
+    def action_view_picking(self):
+        self.ensure_one()
+        result = self.env["ir.actions.actions"]._for_xml_id('stock.action_picking_tree_all')
+        result['domain'] = [('id', 'in', self.x_picking_ids.ids)]
+        # # override the context to get rid of the default filtering on operation type
+        # result['context'] = {'default_partner_id': self.partner_id.id, 'default_origin': self.name, 'default_picking_type_id': self.picking_type_id.id}
+        # # choose the view_mode accordingly
+        # if not pickings or len(pickings) > 1:
+        #     result['domain'] = [('id', 'in', pickings.ids)]
+        # elif len(pickings) == 1:
+        #     res = self.env.ref('stock.view_picking_form', False)
+        #     form_view = [(res and res.id or False, 'form')]
+        #     result['views'] = form_view + [(state, view) for state, view in result.get('views', []) if view != 'form']
+        #     result['res_id'] = pickings.id
+        return result
 
 class MaterialRequestLine(models.Model):
     _name = 'amp.material.request.line'
