@@ -1,4 +1,4 @@
-from odoo import api, fields, models, _, Command
+from odoo import api, fields, models, _, Command, SUPERUSER_ID
 from odoo.tools import float_compare
 from odoo.exceptions import ValidationError
 
@@ -44,6 +44,9 @@ class MaterialRequest(models.Model):
         ('out', 'Out'),
         ('in', 'In'),
     ], string='Consume Type', copy=False, default=False)
+
+    # PICKING DATA
+    x_group_id = fields.Many2one('procurement.group', string="Procurement Group", copy=False)
     x_src_location_id = fields.Many2one('stock.location', string='Source Location', copy=False)
     x_dest_location_id = fields.Many2one('stock.location', string='Destination Location', copy=False)
     x_line_ids = fields.One2many('amp.material.request.line', 'x_request_id', string='Line(s)', copy=False)
@@ -114,27 +117,73 @@ class MaterialRequest(models.Model):
             'target': 'new',
             'context': {
                 'default_x_mr_id': self.id,
-                'default_x_src_location_id': self.x_src_location_id.id,
-                'default_x_dest_location_id': self.x_dest_location_id.id,
-                'default_x_picking_type_id': self.x_src_location_id.warehouse_id.int_type_id.id,
                 'default_x_line_ids': active_line_vals,
             }
         }
+    
+    def _prepare_picking(self):
+        picking_type_id = self.x_src_location_id.warehouse_id.int_type_id
+        return {
+            'picking_type_id': picking_type_id.id,
+            'partner_id': self.x_requester_user_id.partner_id.id,
+            'user_id': False,
+            'date': self.x_required_date,
+            'scheduled_date': self.x_required_date,
+            'x_trans_dttm': self.x_required_date,
+            'origin': self.name,
+            'location_id': self.x_src_location_id.id,
+            'location_dest_id': self.x_dest_location_id.id,
+            'company_id': self.env.company.id,
+            'x_mr_id': self.id,
+            'state': 'draft',
+        }
+
+    def _create_picking(self, lines_to_process):
+        print('masuk MR _create_picking')
+        self.ensure_one()
+        picking_type_id = self.x_src_location_id.warehouse_id.int_type_id
+
+        # create procurement group
+        if not self.x_group_id:
+            self.x_group_id = self.env['procurement.group'].create({
+                'name': self.name,
+                'partner_id': self.x_requester_user_id.partner_id.id
+            })
+        
+        # create picking
+        picking_vals = self._prepare_picking()
+        picking = self.env['stock.picking'].with_user(SUPERUSER_ID).create(picking_vals)
+
+        # create moves
+        move_vals = []
+        for line in lines_to_process:
+            move_vals.append({
+                'name': (line.x_product_id.display_name or '')[:2000],
+                'product_id': line.x_product_id.id,
+                'date': self.x_required_date,
+                'date_deadline': self.x_required_date,
+                'location_id': self.x_src_location_id.id,
+                'location_dest_id': self.x_dest_location_id.id,
+                'picking_id': picking.id,
+                'partner_id': self.x_requester_user_id.partner_id.id,'state': 'draft',
+                'x_mr_line_id': line.x_mr_line_id.id,
+                'company_id': self.env.company.id,
+                'picking_type_id': picking_type_id.id,
+                'group_id': self.x_group_id.id,
+                'origin': self.name,
+                'warehouse_id': picking_type_id.warehouse_id.id,
+                'product_uom_qty': line.x_qty,
+                'product_uom': line.x_uom_id.id,
+            })
+        
+        if move_vals:
+            self.env['stock.move'].with_user(SUPERUSER_ID).create(move_vals)
+
 
     def action_view_picking(self):
         self.ensure_one()
         result = self.env["ir.actions.actions"]._for_xml_id('stock.action_picking_tree_all')
         result['domain'] = [('id', 'in', self.x_picking_ids.ids)]
-        # # override the context to get rid of the default filtering on operation type
-        # result['context'] = {'default_partner_id': self.partner_id.id, 'default_origin': self.name, 'default_picking_type_id': self.picking_type_id.id}
-        # # choose the view_mode accordingly
-        # if not pickings or len(pickings) > 1:
-        #     result['domain'] = [('id', 'in', pickings.ids)]
-        # elif len(pickings) == 1:
-        #     res = self.env.ref('stock.view_picking_form', False)
-        #     form_view = [(res and res.id or False, 'form')]
-        #     result['views'] = form_view + [(state, view) for state, view in result.get('views', []) if view != 'form']
-        #     result['res_id'] = pickings.id
         return result
 
 class MaterialRequestLine(models.Model):

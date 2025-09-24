@@ -43,6 +43,7 @@
                             <group>
                                 <field name="x_type" readonly="status != 'draft'"/>
                                 <field name="x_consume_type" invisible="x_type != 'consumption'" readonly="status != 'draft'"/>
+                                <field name="x_group_id" invisible="x_group_id == False" readonly="1" options="{'no_create': True, 'no_create_edit': True, 'no_open': True}"/>
                             </group>
                             <group>
                                 <field name="x_src_location_id" domain="[('usage', '=', 'internal')]" options="{'no_create': True, 'no_create_edit': True, 'no_open': True}"
