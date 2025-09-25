@@ -22,6 +22,8 @@
                         <button name="action_confirm" type="object" string="Confirm" class="oe_highlight" invisible="status != 'draft'"/>
                         <button name="action_reset_to_draft" type="object" string="Reset to Draft" invisible="status != 'open'"/>
                         <button name="action_create_picking" type="object" string="Create Picking" class="oe_highlight" invisible="status in ('draft', 'done', 'close')"/>
+                        <!-- helper button -->
+                        <button name="action_get_picking_qty" type="object" string="Update Qty" class="oe_highlight" invisible="status in ('draft',)"/>
                         <field name="status" widget="statusbar"/>
                     </header>
                     <sheet>

@@ -179,12 +179,16 @@ class MaterialRequest(models.Model):
         if move_vals:
             self.env['stock.move'].with_user(SUPERUSER_ID).create(move_vals)
 
-
     def action_view_picking(self):
         self.ensure_one()
         result = self.env["ir.actions.actions"]._for_xml_id('stock.action_picking_tree_all')
         result['domain'] = [('id', 'in', self.x_picking_ids.ids)]
         return result
+    
+    # helper action
+    def action_get_picking_qty(self):
+        self.x_line_ids._compute_picking_qty()
+
 
 class MaterialRequestLine(models.Model):
     _name = 'amp.material.request.line'
@@ -196,13 +200,22 @@ class MaterialRequestLine(models.Model):
             ost_qty = rec.x_req_qty - rec.x_processed_qty - rec.x_done_qty
             rec.x_outstanding_qty = ost_qty if float_compare(ost_qty, 0, precision_rounding=rec.x_uom_id.rounding) == 1 else 0
 
+    @api.depends('x_move_ids', 'x_move_ids.state', 'x_move_ids.product_uom_qty')
+    def _compute_picking_qty(self):
+        for rec in self:
+            processed_moves = self.x_move_ids.filtered(lambda m: m.state not in ('done', 'cancel',))
+            done_moves = self.x_move_ids.filtered(lambda m: m.state in ('done',))
+
+            rec.x_processed_qty = sum(processed_moves.mapped('product_uom_qty'))
+            rec.x_done_qty = sum(done_moves.mapped('quantity'))
+
     x_request_id = fields.Many2one('amp.material.request', string='Material Request', ondelete='cascade', copy=False)
     x_product_id = fields.Many2one('product.product', string='Product')
     x_uom_id = fields.Many2one(related='x_product_id.uom_id', store=True)
 
     x_req_qty = fields.Float(string='Request Qty', digits='Product Unit of Measure', copy=False)
-    x_processed_qty = fields.Float(string='Processed Qty', digits='Product Unit of Measure',  help="Qty being processed.")
-    x_done_qty = fields.Float(string='Done Qty', digits='Product Unit of Measure', copy=False, help="Done Qty")
+    x_processed_qty = fields.Float(string='Processed Qty', compute="_compute_picking_qty", digits='Product Unit of Measure', store=True,  help="Qty being processed.")
+    x_done_qty = fields.Float(string='Done Qty', compute="_compute_picking_qty", digits='Product Unit of Measure', store=True, help="Done Qty")
     x_outstanding_qty = fields.Float(string='Outstanding Qty', compute='_compute_ost_qty', digits='Product Unit of Measure', store=True, 
                                      help="""Outstanding Qty = Request Qty - Processed Qty - Done Qty""")
     
