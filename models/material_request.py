@@ -8,15 +8,29 @@ class MaterialRequest(models.Model):
     _description = 'Material Request'
     _inherit = ['mail.thread', 'mail.activity.mixin']
 
-    @api.depends('x_is_confirmed', 'x_is_closed')
+    @api.depends('x_line_ids', 'x_line_ids.status')
     def _compute_state(self):
         for rec in self:
-            if rec.x_is_closed:
-                rec.status = 'close'
-            elif rec.x_is_confirmed:
-                rec.status = 'open'
+            print('lines: %s' % (rec.x_line_ids,))
+            if rec.x_line_ids:
+                if all(l.status == 'close' for l in rec.x_line_ids):
+                    print('masuk close')
+                    rec.status = 'close'
+                elif all(l.status == 'done' for l in rec.x_line_ids):
+                    print('masuk done')
+                    rec.status = 'done'
+                elif any(l.status in ('progress', 'done',) for l in rec.x_line_ids):
+                    print('masuk progress')
+                    rec.status = 'progress'
+                elif all(l.status == 'open' for l in rec.x_line_ids):
+                    print('masuk open')
+                    rec.status = 'open'
+                else:
+                    print('masuk draft')
+                    rec.status = 'draft'
             else:
                 rec.status = 'draft'
+
     
     @api.depends('x_picking_ids')
     def _compute_picking_count(self):
@@ -191,6 +205,9 @@ class MaterialRequest(models.Model):
     def action_get_picking_qty(self):
         self.x_line_ids._compute_picking_qty()
 
+    def action_set_status(self):
+        self._compute_state()
+
 
 class MaterialRequestLine(models.Model):
     _name = 'amp.material.request.line'
@@ -215,20 +232,19 @@ class MaterialRequestLine(models.Model):
     def _compute_state(self):
         for rec in self:
             if rec.x_is_closed == 'close':
-                rec.state = 'close'
+                rec.status = 'close'
             elif rec.x_is_confirmed:
                 if float_compare(rec.x_req_qty, rec.x_done_qty, precision_rounding=rec.x_uom_id.rounding) in (0, -1):
-                    rec.state = 'done'
+                    rec.status = 'done'
                 elif float_compare(rec.x_req_qty, rec.x_outstanding_qty, precision_rounding=rec.x_uom_id.rounding) == 1:
-                    rec.state = 'progress'
+                    rec.status = 'progress'
                 else:
-                    rec.state = 'open'
-                    
+                    rec.status = 'open'
             else:
-                rec.state = 'draft'
+                rec.status = 'draft'
 
-    state = fields.Selection([
-        ('draft', 'draft'),
+    status = fields.Selection([
+        ('draft', 'Draft'),
         ('open', 'Open'),
         ('progress', 'In Progress'),
         ('done', 'Done'),
