@@ -64,6 +64,9 @@
                                         <field name="x_processed_qty"/>
                                         <field name="x_done_qty"/>
                                         <field name="x_outstanding_qty"/>
+                                        <field name="x_is_confirmed" readonly="1"/>
+                                        <field name="x_is_closed" readonly="1"/>
+                                        <field name="state" readonly="1"/>
                                     </list>
                                 </field>
                             </page>

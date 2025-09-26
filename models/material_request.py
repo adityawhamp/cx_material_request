@@ -1,5 +1,5 @@
 from odoo import api, fields, models, _, Command, SUPERUSER_ID
-from odoo.tools import float_compare
+from odoo.tools import float_compare, float_is_zero
 from odoo.exceptions import ValidationError
 
 
@@ -89,10 +89,12 @@ class MaterialRequest(models.Model):
         for rec in self:
             rec.validation('confirm')
             rec.x_is_confirmed = True
+            rec.x_line_ids.x_is_confirmed = True
     
     def action_reset_to_draft(self):
         for rec in self:
             rec.x_is_confirmed = False
+            rec.x_line_ids.x_is_confirmed = False
 
     def action_create_picking(self):
         active_lines = self.x_line_ids.filtered(lambda l: float_compare(l.x_outstanding_qty, 0, precision_rounding=l.x_uom_id.rounding) == 1)
@@ -209,6 +211,31 @@ class MaterialRequestLine(models.Model):
             rec.x_processed_qty = sum(processed_moves.mapped('product_uom_qty'))
             rec.x_done_qty = sum(done_moves.mapped('quantity'))
 
+    @api.depends('x_is_confirmed', 'x_is_closed', 'x_done_qty', 'x_outstanding_qty')
+    def _compute_state(self):
+        for rec in self:
+            if rec.x_is_closed == 'close':
+                rec.state = 'close'
+            elif rec.x_is_confirmed:
+                if float_compare(rec.x_req_qty, rec.x_done_qty, precision_rounding=rec.x_uom_id.rounding) in (0, -1):
+                    rec.state = 'done'
+                elif float_compare(rec.x_req_qty, rec.x_outstanding_qty, precision_rounding=rec.x_uom_id.rounding) == 1:
+                    rec.state = 'progress'
+                else:
+                    rec.state = 'open'
+                    
+            else:
+                rec.state = 'draft'
+
+    state = fields.Selection([
+        ('draft', 'draft'),
+        ('open', 'Open'),
+        ('progress', 'In Progress'),
+        ('done', 'Done'),
+        ('close', 'Close'),
+    ], default='draft', copy=False, tracking=True, compute='_compute_state', store=True)
+    x_is_confirmed = fields.Boolean(string='Is Confirmed?', default=False, copy=False)
+    x_is_closed = fields.Boolean(string='Is Closed?', default=False, copy=False)
     x_request_id = fields.Many2one('amp.material.request', string='Material Request', ondelete='cascade', copy=False)
     x_product_id = fields.Many2one('product.product', string='Product')
     x_uom_id = fields.Many2one(related='x_product_id.uom_id', store=True)
