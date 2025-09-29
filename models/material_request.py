@@ -216,14 +216,17 @@ class MaterialRequestLine(models.Model):
     @api.depends('x_req_qty', 'x_processed_qty', 'x_done_qty')
     def _compute_ost_qty(self):
         for rec in self:
-            ost_qty = rec.x_req_qty - rec.x_processed_qty - rec.x_done_qty
-            rec.x_outstanding_qty = ost_qty if float_compare(ost_qty, 0, precision_rounding=rec.x_uom_id.rounding) == 1 else 0
+            if rec.x_product_id:
+                ost_qty = rec.x_req_qty - rec.x_processed_qty - rec.x_done_qty
+                rec.x_outstanding_qty = ost_qty if float_compare(ost_qty, 0, precision_rounding=rec.x_uom_id.rounding) == 1 else 0
+            else:
+                rec.x_outstanding_qty = 0
 
     @api.depends('x_move_ids', 'x_move_ids.state', 'x_move_ids.product_uom_qty')
     def _compute_picking_qty(self):
         for rec in self:
-            processed_moves = self.x_move_ids.filtered(lambda m: m.state not in ('done', 'cancel',))
-            done_moves = self.x_move_ids.filtered(lambda m: m.state in ('done',))
+            processed_moves = self.x_move_ids.filtered(lambda m: m.state not in ('done', 'cancel',) and rec.x_product_id.id == m.product_id.id)
+            done_moves = self.x_move_ids.filtered(lambda m: m.state in ('done',) and rec.x_product_id.id == m.product_id.id)
 
             rec.x_processed_qty = sum(processed_moves.mapped('product_uom_qty'))
             rec.x_done_qty = sum(done_moves.mapped('quantity'))
