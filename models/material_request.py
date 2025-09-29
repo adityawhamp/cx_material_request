@@ -39,8 +39,6 @@ class MaterialRequest(models.Model):
 
     name = fields.Char(string='Ref', required=True, copy=False, readonly=True,
                        index='trigram', default=lambda self: _('New Material Request'))
-    x_is_confirmed = fields.Boolean(string='Is Confirmed?', default=False, copy=False)
-    x_is_closed = fields.Boolean(string='Is Closed?', default=False, copy=False)
     status = fields.Selection(string='State', selection=[
         ('draft', 'Draft'),
         ('open', 'Open'),
@@ -102,12 +100,10 @@ class MaterialRequest(models.Model):
     def action_confirm(self):
         for rec in self:
             rec.validation('confirm')
-            rec.x_is_confirmed = True
             rec.x_line_ids.x_is_confirmed = True
     
     def action_reset_to_draft(self):
         for rec in self:
-            rec.x_is_confirmed = False
             rec.x_line_ids.x_is_confirmed = False
 
     def action_create_picking(self):
