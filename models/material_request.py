@@ -197,6 +197,24 @@ class MaterialRequest(models.Model):
         result['domain'] = [('id', 'in', self.x_picking_ids.ids)]
         return result
     
+    @api.onchange('x_type')
+    def _onchange_type(self):
+        self.x_src_location_id = False
+        self.x_dest_location_id = False
+
+    @api.onchange('x_consume_type')
+    def _onchange_consume_type(self):
+        src_location_id = False
+        dest_location_id = False
+
+        if self.x_consume_type == 'out':
+            dest_location_id = 14
+        elif self.x_consume_type == 'in':
+            src_location_id = 14
+
+        self.x_src_location_id = src_location_id
+        self.x_dest_location_id = dest_location_id
+    
     # helper action
     def action_get_picking_qty(self):
         self.x_line_ids._compute_picking_qty()
